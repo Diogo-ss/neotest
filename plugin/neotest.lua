@@ -21,6 +21,7 @@ local cmd_completion_store = {
     "open",
     "close",
     "toggle",
+    "clear",
   },
   run = {
     "file",
@@ -83,6 +84,9 @@ commands = {
     toggle = function()
       neotest.output_panel.toggle()
     end,
+    clear = function()
+      require("neotest").output_panel.clear()
+    end,
   },
   run = {
     function(params)
@@ -134,7 +138,12 @@ commands = {
 }
 
 local function eval_luastring(value)
-  return loadstring("return " .. value, value)()
+  local evaluated = loadstring("return " .. value, value)()
+  if evaluated == nil then
+    -- Treat as unquoted string
+    evaluated = value
+  end
+  return evaluated
 end
 
 local function make_params(info, args)

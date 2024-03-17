@@ -38,7 +38,7 @@ function neotest.lib.subprocess.init()
     logger.error("Failed to start server: " .. parent_address)
     return
   end
-  local cmd = { vim.loop.exepath(), "--embed", "--headless" }
+  local cmd = { vim.loop.exepath(), "--embed", "--headless", "-n" }
   logger.info("Starting child process with command: " .. table.concat(cmd, " "))
   success, child_chan = pcall(nio.fn.jobstart, cmd, {
     rpc = true,
@@ -66,7 +66,9 @@ function neotest.lib.subprocess.init()
       { parent_address }
     )
     -- Load dependencies
-    nio.fn.rpcrequest(child_chan, "nvim_exec_lua", "require('nvim-treesitter')", {})
+    if pcall(require, "nvim-treesitter") then
+      nio.fn.rpcrequest(child_chan, "nvim_exec_lua", "require('nvim-treesitter')", {})
+    end
     nio.fn.rpcrequest(child_chan, "nvim_exec_lua", "require('plenary')", {})
     enabled = true
     nio.api.nvim_create_autocmd("VimLeavePre", { callback = cleanup })

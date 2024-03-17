@@ -21,11 +21,13 @@ function M.find(root, opts)
   local err, dir_handle = uv.fs_opendir(root, max_entries)
   assert(not err, err)
   while dir_handle or #dirs_to_scan > 0 do
-    if not dir_handle then
+    while not dir_handle and #dirs_to_scan > 0 do
       dir = table.remove(dirs_to_scan, 1)
       logger.debug("Scanning directory:", dir)
       err, dir_handle = uv.fs_opendir(root .. sep .. dir, max_entries)
-      assert(not err, err)
+      if err then
+        logger.error("Error opening directory:", dir, err)
+      end
     end
 
     local iter_dir = function()

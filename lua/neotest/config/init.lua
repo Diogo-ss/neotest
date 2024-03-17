@@ -277,6 +277,17 @@ local default_config = {
         (import_from_statement (_ (identifier) @symbol))
         (import_statement (_ (identifier) @symbol))
       ]],
+      go = [[
+        ;query
+        ;Captures imported types
+        (qualified_type name: (type_identifier) @symbol)
+        ;Captures package-local and built-in types
+        (type_identifier)@symbol
+        ;Captures imported function calls and variables/constants
+        (selector_expression field: (field_identifier) @symbol)
+        ;Captures package-local functions calls
+        (call_expression function: (identifier) @symbol)
+      ]],
       lua = [[
         ;query
         ;Captures module names in require calls
@@ -313,6 +324,61 @@ local default_config = {
         end
         return symbols
       end,
+      ruby = [[
+        ;query
+        ;rspec - class name
+        (call
+          method: (identifier) @_ (#match? @_ "^(describe|context)")
+          arguments: (argument_list (constant) @symbol )
+        )
+
+        ;rspec - namespaced class name
+        (call
+          method: (identifier)
+          arguments: (argument_list
+            (scope_resolution
+              name: (constant) @symbol))
+        )
+      ]],
+      rust = [[
+        ;query
+        ;submodule import
+        (mod_item
+          name: (identifier) @symbol)
+        ;single import
+        (use_declaration
+          argument: (scoped_identifier
+            name: (identifier) @symbol))
+        ;import list
+        (use_declaration
+          argument: (scoped_use_list
+            list: (use_list
+                [(scoped_identifier
+                   path: (identifier)
+                   name: (identifier) @symbol)
+                 ((identifier) @symbol)])))
+        ;wildcard import
+        (use_declaration
+          argument: (scoped_use_list
+            path: (identifier)
+            [(use_list
+              [(scoped_identifier
+                path: (identifier)
+                name: (identifier) @symbol)
+                ((identifier) @symbol)
+              ])]))
+      ]],
+      haskell = [[
+        ;query
+        ;explicit import
+        ((import_item [(variable)]) @symbol)
+        ;symbols that may be imported implicitly
+        ((type) @symbol)
+        (qualified_variable (variable) @symbol)
+        (exp_apply (exp_name (variable) @symbol))
+        ((constructor) @symbol)
+        ((operator) @symbol)
+      ]],
     },
     filter_path = nil,
   },
